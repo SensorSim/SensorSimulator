@@ -1,103 +1,116 @@
-# Archiver Service
+# Sensor Simulator Service
 
-Archiver is a microservice responsible for storing sensor measurements
-in a PostgreSQL database. It is part of the SensorSim / Reactor
-Monitoring System.
+Sensor Simulator is a microservice responsible for generating synthetic sensor data
+and sending it to the Archiver service via REST API.
+
+It simulates multiple sensor instances and types and is designed to be horizontally
+scalable and configuration-driven.
+
+---
 
 ## Responsibilities
+- Periodically generate sensor measurements
+- Support multiple sensor instances and sensor types
+- Send measurements to Archiver service
+- Run as a background worker (no external API required)
 
--   Accept sensor measurements (sensorId, timestamp, value)
--   Persist data using Entity Framework Core
--   Expose REST API with Swagger documentation
--   Provide health endpoints for container orchestration (Docker /
-    Kubernetes)
+---
 
 ## Tech Stack
+- .NET (ASP.NET Core Minimal API)
+- BackgroundService
+- REST (HttpClient)
+- Docker
+- GitHub Actions (CI)
 
--   .NET (ASP.NET Core Minimal API)
--   Entity Framework Core
--   PostgreSQL
--   Docker / Docker Compose
--   Swagger (OpenAPI)
+---
 
-## API Endpoints
+## Architecture Role
+Sensor Simulator acts as a **producer** in the system architecture.
+It does not persist data and does not contain business logic such as alarms.
+It communicates exclusively via REST APIs.
 
-### POST /measurements
+---
 
-Creates a new measurement.
+## Data Format
 
-Request body:
+Measurements sent to Archiver:
 
-``` json
+```json
 {
-  "sensorId": "S1",
-  "timestamp": "2025-12-15T14:00:00+01:00",
-  "value": 42.0
+  "sensorId": "temp-1",
+  "timestamp": "2025-12-15T20:15:00Z",
+  "value": 123.45
 }
 ```
 
+---
+
+## Configuration
+
+### Environment Variables
+
+| Variable | Description | Default |
+|---------|-------------|---------|
+| ArchiverUrl | Base URL of Archiver service | http://localhost:8081 |
+
 Example:
-
-``` bash
-curl -X POST http://localhost:8081/measurements \
-  -H "Content-Type: application/json" \
-  -d "{\"sensorId\":\"S1\",\"timestamp\":\"2025-12-15T14:00:00+01:00\",\"value\":42.0}"
+```bash
+ArchiverUrl=http://archiver:8080
 ```
 
-### GET /measurements
-
-Returns stored measurements.
-
-Optional query parameters: - sensorId
-
-Examples:
-
-``` bash
-curl http://localhost:8081/measurements
-curl "http://localhost:8081/measurements?sensorId=S1"
-```
-
-### Health Checks
-
--   GET /health/live
--   GET /health/ready
-
-Examples:
-
-``` bash
-curl http://localhost:8081/health/live
-curl http://localhost:8081/health/ready
-```
+---
 
 ## Local Development
 
 ### Prerequisites
+- .NET SDK
+- Docker (optional)
 
--   Docker
--   .NET SDK
-
-### Run with Docker Compose
-
-``` bash
-docker compose up -d
+### Run locally
+```bash
+dotnet run
 ```
 
-Swagger UI:
+The service starts immediately and begins sending measurements.
 
-    http://localhost:8081/swagger
-
-## Database
-
--   PostgreSQL
--   Database schema managed with EF Core migrations
--   Migrations are applied automatically on service startup
+---
 
 ## Docker
 
-The service is containerized and designed to be stateless. It can be
-scaled horizontally in Kubernetes environments.
+### Build image
+```bash
+docker build -t sensorsimulator:local .
+```
 
-## Architecture Role
+### Run container
+```bash
+docker run --rm \
+  -e ArchiverUrl=http://archiver:8080 \
+  sensorsimulator:local
+```
 
-Archiver acts as the persistence layer in a microservice-based system.
-Other services communicate with Archiver via REST APIs.
+---
+
+## Docker Compose Integration
+
+Example:
+```yaml
+sensor-simulator:
+  image: sensorsimulator:local
+  environment:
+    ArchiverUrl: http://archiver:8080
+```
+
+---
+
+## Scaling
+The service is stateless and can be horizontally scaled.
+Multiple instances can run in parallel and send data to the same Archiver service.
+
+---
+
+## CI/CD
+The repository includes GitHub Actions pipelines for:
+- .NET build
+- Docker image build
