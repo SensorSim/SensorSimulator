@@ -1,6 +1,14 @@
-bin/
-obj/
+# Visual Studio
 .vs/
 *.user
-*.log
-.env
+*.suo
+
+# Build output
+bin/
+obj/
+
+# Local settings
+appsettings.Development.json
+
+# OS
+Thumbs.db
