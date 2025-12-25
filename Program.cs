@@ -21,7 +21,7 @@ builder.Services.AddHttpClient("sensormanager", client =>
 builder.Services.AddSingleton<ISensorRuntimeRegistry, SensorRuntimeRegistry>();
 builder.Services.AddHostedService<SensorConfigSyncWorker>();
 
-// Kafka producer (for real-time stream). REST -> Archiver remains unchanged.
+// Kafka producer (for real-time streaming)
 builder.Services.AddSingleton<IProducer<string, string>>(_ =>
 {
     var bootstrapServers = builder.Configuration["Kafka:BootstrapServers"]

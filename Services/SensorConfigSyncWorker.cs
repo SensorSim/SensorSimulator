@@ -57,7 +57,6 @@ public class SensorConfigSyncWorker : BackgroundService
 
     TimeSpan backoff = TimeSpan.FromSeconds(2);
 
-    // 🔁 retry initial sync until SensorManager is reachable
     while (!stoppingToken.IsCancellationRequested)
     {
         try
