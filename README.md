@@ -1,116 +1,36 @@
-# Sensor Simulator Service
+# SensorSimulator
 
-Sensor Simulator is a microservice responsible for generating synthetic sensor data
-and sending it to the Archiver service via REST API.
+**Purpose:** Keeps an up-to-date view of sensor configuration and produces measurements.
 
-It simulates multiple sensor instances and types and is designed to be horizontally
-scalable and configuration-driven.
+It does **not** have its own database. It reads configuration via:
+- SensorManager REST (initial sync)
+- Kafka `sensor-config-events` (updates)
 
----
-
-## Responsibilities
-- Periodically generate sensor measurements
-- Support multiple sensor instances and sensor types
-- Send measurements to Archiver service
-- Run as a background worker (no external API required)
+Then it simulates enabled sensors and:
+- writes measurements to **Archiver** via REST
+- publishes a live stream to Kafka topic **`measurements`**
 
 ---
 
-## Tech Stack
-- .NET (ASP.NET Core Minimal API)
-- BackgroundService
-- REST (HttpClient)
-- Docker
-- GitHub Actions (CI)
+## API
+
+Swagger:
+- `http://localhost:8084/swagger`
+
+Endpoints:
+- `GET /simulated-sensors` (view/drive simulation state)
+- `POST /simulated-sensors`
+- `PUT /simulated-sensors/{sensorId}`
+- `DELETE /simulated-sensors/{sensorId}`
+- `GET /health/live`
+- `GET /health/ready`
+
+Note: the simulated-sensors endpoints act as a thin “simulation control” layer and typically delegate config updates back to SensorManager.
 
 ---
 
-## Architecture Role
-Sensor Simulator acts as a **producer** in the system architecture.
-It does not persist data and does not contain business logic such as alarms.
-It communicates exclusively via REST APIs.
+## Configuration (env vars)
 
----
-
-## Data Format
-
-Measurements sent to Archiver:
-
-```json
-{
-  "sensorId": "temp-1",
-  "timestamp": "2025-12-15T20:15:00Z",
-  "value": 123.45
-}
-```
-
----
-
-## Configuration
-
-### Environment Variables
-
-| Variable | Description | Default |
-|---------|-------------|---------|
-| ArchiverUrl | Base URL of Archiver service | http://localhost:8081 |
-
-Example:
-```bash
-ArchiverUrl=http://archiver:8080
-```
-
----
-
-## Local Development
-
-### Prerequisites
-- .NET SDK
-- Docker (optional)
-
-### Run locally
-```bash
-dotnet run
-```
-
-The service starts immediately and begins sending measurements.
-
----
-
-## Docker
-
-### Build image
-```bash
-docker build -t sensorsimulator:local .
-```
-
-### Run container
-```bash
-docker run --rm \
-  -e ArchiverUrl=http://archiver:8080 \
-  sensorsimulator:local
-```
-
----
-
-## Docker Compose Integration
-
-Example:
-```yaml
-sensor-simulator:
-  image: sensorsimulator:local
-  environment:
-    ArchiverUrl: http://archiver:8080
-```
-
----
-
-## Scaling
-The service is stateless and can be horizontally scaled.
-Multiple instances can run in parallel and send data to the same Archiver service.
-
----
-
-## CI/CD
-The repository includes GitHub Actions pipelines for:
-- .NET build
-- Docker image build
+- `SensorManager__BaseUrl` (or equivalent) – where to reach SensorManager
+- `Archiver__BaseUrl` (or equivalent) – where to send measurements
+- Kafka bootstrap settings (see compose env)
