@@ -25,6 +25,10 @@ builder.Services.AddHttpClient("sensormanager", client =>
 builder.Services.AddSingleton<ISensorRuntimeRegistry, SensorRuntimeRegistry>();
 builder.Services.AddHostedService<SensorConfigSyncWorker>();
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
+
 // Kafka producer (for real-time stream). REST -> Archiver remains unchanged.
 builder.Services.AddSingleton<IProducer<string, string>>(_ =>
 {
@@ -43,6 +47,10 @@ builder.Services.AddSingleton<IProducer<string, string>>(_ =>
 });
 
 var app = builder.Build();
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
 
 app.MapGet("/", () => Results.Ok(new
 {
