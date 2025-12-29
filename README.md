@@ -1,36 +1,54 @@
 # SensorSimulator
 
-**Purpose:** Keeps an up-to-date view of sensor configuration and produces measurements.
+Simulation service.
 
-It does **not** have its own database. It reads configuration via:
-- SensorManager REST (initial sync)
-- Kafka `sensor-config-events` (updates)
+Keeps an up-to-date view of sensor configuration and generates measurements for sensors that are `enabled` and `simulate=true`.
 
-Then it simulates enabled sensors and:
-- writes measurements to **Archiver** via REST
-- publishes a live stream to Kafka topic **`measurements`**
+- initial sync: SensorManager REST
+- updates: Kafka `sensor-config-events`
+- output: POST to Archiver + Kafka topic `measurements`
 
----
+## Branching
+
+- `dev` – development
+- `main` – stable / demo-ready
+
+## Requirements
+
+- .NET SDK (tested with 10.0.101)
+- Kafka
+- Access to SensorManager + Archiver
+
+## Run
+
+Recommended: run the full stack with Docker Compose (see `infra/docker`).
+
+Local run:
+
+```bash
+dotnet run
+```
+
+## Configuration
+
+Environment variables used in Docker/Kubernetes:
+
+- `SensorManager__BaseUrl` – SensorManager base URL
+- `ArchiverUrl` (or `Archiver__BaseUrl`) – Archiver base URL
+- `Kafka__BootstrapServers` – Kafka bootstrap servers
 
 ## API
 
-Swagger:
-- `http://localhost:8084/swagger`
+Swagger (docker default): `http://localhost:8084/swagger`
 
 Endpoints:
-- `GET /simulated-sensors` (view/drive simulation state)
+
+- `GET /simulated-sensors`
 - `POST /simulated-sensors`
 - `PUT /simulated-sensors/{sensorId}`
 - `DELETE /simulated-sensors/{sensorId}`
+
+Health:
+
 - `GET /health/live`
 - `GET /health/ready`
-
-Note: the simulated-sensors endpoints act as a thin “simulation control” layer and typically delegate config updates back to SensorManager.
-
----
-
-## Configuration (env vars)
-
-- `SensorManager__BaseUrl` (or equivalent) – where to reach SensorManager
-- `Archiver__BaseUrl` (or equivalent) – where to send measurements
-- Kafka bootstrap settings (see compose env)

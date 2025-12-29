@@ -1,6 +1,4 @@
-// SensorSimulator: runs simulation loops based on configuration from SensorManager.
-// Startup: initial sync via SensorManager API; then listens to Kafka config events.
-// Outputs: POST measurements to Archiver API (+ optional Kafka measurements stream).
+// SensorSimulator: generates measurements from SensorManager config.
 
 using SensorSimulator.Services;
 using SensorSimulator.Dtos;
@@ -29,7 +27,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 
-// Kafka producer (for real-time stream). REST -> Archiver remains unchanged.
+// Kafka producer (live stream).
 builder.Services.AddSingleton<IProducer<string, string>>(_ =>
 {
     var bootstrapServers = builder.Configuration["Kafka:BootstrapServers"]
@@ -39,7 +37,6 @@ builder.Services.AddSingleton<IProducer<string, string>>(_ =>
     var config = new ProducerConfig
     {
         BootstrapServers = bootstrapServers,
-        // Helps avoid duplicating messages during transient retries.
         EnableIdempotence = true
     };
 
