@@ -15,7 +15,6 @@ env:
   REGISTRY: ghcr.io
   IMAGE: ghcr.io/${{ github.repository_owner }}/reactor-monitor-sensorsimulator
 
-# All commands in this workflow run from the service folder.
 defaults:
   run:
     working-directory: SensorSimulator
@@ -25,8 +24,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      # Run tests in a .NET SDK container so we don't depend on the runner's installed .NET version.
       - name: Test (dotnet test)
         run: |
           docker run --rm \
