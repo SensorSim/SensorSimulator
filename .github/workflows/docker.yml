@@ -4,6 +4,10 @@ on:
   push:
     branches: [ "main" ]
 
+defaults:
+  run:
+    working-directory: SensorSimulator
+
 jobs:
   docker:
     runs-on: ubuntu-latest
@@ -15,4 +19,4 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Build Docker image
-        run: docker build -t sensorsimulator:ci .
+        run: docker build -t sensorsimulator:ci -f Dockerfile .
