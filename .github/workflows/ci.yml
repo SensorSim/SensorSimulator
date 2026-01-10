@@ -5,8 +5,12 @@ on:
     branches: [ "main" ]
   pull_request:
 
+defaults:
+  run:
+    working-directory: SensorSimulator
+
 jobs:
-  build:
+  build-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,3 +26,6 @@ jobs:
 
       - name: Build
         run: dotnet build -c Release --no-restore
+
+      - name: Test
+        run: dotnet test -c Release --no-build
