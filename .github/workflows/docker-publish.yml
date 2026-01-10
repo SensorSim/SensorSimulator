@@ -15,20 +15,17 @@ env:
   REGISTRY: ghcr.io
   IMAGE: ghcr.io/${{ github.repository_owner }}/reactor-monitor-sensorsimulator
 
-defaults:
-  run:
-    working-directory: SensorSimulator
-
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Test (dotnet test)
         run: |
           docker run --rm \
             -v "${{ github.workspace }}:/src" \
-            -w /src/SensorSimulator \
+            -w /src \
             mcr.microsoft.com/dotnet/sdk:10.0 \
             dotnet test ./SensorSimulator.csproj -c Release
 
@@ -50,14 +47,14 @@ jobs:
           images: ${{ env.IMAGE }}
           tags: |
             type=sha
-            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+            type=raw,value=latest,enable={{is_default_branch}}
             type=ref,event=tag
 
       - name: Build (push only on main/tags)
         uses: docker/build-push-action@v6
         with:
-          context: ./SensorSimulator
-          file: ./SensorSimulator/Dockerfile
+          context: .
+          file: ./Dockerfile
           push: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
